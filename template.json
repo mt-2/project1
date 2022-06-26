@@ -1,0 +1,792 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentName": {
+            "defaultValue": "environment-sample",
+            "type": "String",
+            "metadata": {
+                "description": "The name of the environment in the cluster."
+            }
+        },
+        "createAKSCluster": {
+            "defaultValue": true,
+            "type": "Bool",
+            "metadata": {
+                "description": "True to create a new AKS cluster."
+            }
+        },
+        "aksClusterName": {
+            "defaultValue": "aksCluster",
+            "type": "String",
+            "metadata": {
+                "description": "The name of the Azure Kubernetes Service Cluster."
+            }
+        },
+        "existingAksClusterId": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "The ID of the existing Azure Kubernetes Service Cluster."
+            }
+        },
+        "existingAksClusterName": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "The name of the existing Azure Kubernetes Service Cluster."
+            }
+        },
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String",
+            "metadata": {
+                "description": "The location of the Managed Cluster resource."
+            }
+        },
+        "availabilityZones": {
+            "defaultValue": "none",
+            "type": "String",
+            "metadata": {
+                "description": "Availability Zone to deploy in"
+            }
+        },
+        "primaryNodePoolName": {
+            "defaultValue": "primarynp",
+            "type": "String",
+            "metadata": {
+                "description": "The name of primary server's nodepool"
+            }
+        },
+        "primaryNodeCount": {
+            "minValue": 1,
+            "maxValue": 2,
+            "type": "Int",
+            "metadata": {
+                "description": "The number of nodes for the cluster."
+            }
+        },
+        "primaryAgentVMSize": {
+            "defaultValue": "Standard_D16ds_v5",
+            "type": "String",
+            "metadata": {
+                "description": "The size of the Virtual Machine."
+            }
+        },
+        "mediaNodePoolName": {
+            "defaultValue": "medianp",
+            "type": "String",
+            "metadata": {
+                "description": "The name of media server's nodepool"
+            }
+        },
+        "mediaNodeCount": {
+            "defaultValue": 1,
+            "minValue": 1,
+            "maxValue": 1000,
+            "type": "Int",
+            "metadata": {
+                "description": "The number of nodes for the cluster."
+            }
+        },
+        "mediaAgentVMSize": {
+            "defaultValue": "Standard_D8ds_v5",
+            "type": "String",
+            "metadata": {
+                "description": "The size of the Virtual Machine."
+            }
+        },
+        "msdpNodePoolName": {
+            "defaultValue": "msdpnp",
+            "type": "String",
+            "metadata": {
+                "description": "The name of msdp server's nodepool"
+            }
+        },
+        "msdpNodeCount": {
+            "defaultValue": 4,
+            "minValue": 4,
+            "maxValue": 1000,
+            "type": "Int",
+            "metadata": {
+                "description": "The number of nodes for the cluster."
+            }
+        },
+        "msdpAgentVMSize": {
+            "defaultValue": "Standard_E8s_v5",
+            "type": "String",
+            "metadata": {
+                "description": "The size of the Virtual Machine."
+            }
+        },
+        "networkConfiguration": {
+            "defaultValue": "azure",
+            "allowedValues": [
+                "azure"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Network plugin used for building Kubernetes network."
+            }
+        },
+        "dedicatedSubnetforLoadBalancer": {
+            "defaultValue": true,
+            "type": "Bool"
+        },
+        "newAKSVirtualNetworkName": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Name of an existing VNET that will contain this AKS deployment."
+            }
+        },
+        "newAKSVirtualNetworkResourceGroup": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Name of the existing VNET resource group"
+            }
+        },
+        "newAKSSubnet1Name": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Subnet name that will contain the Netbackup deployment"
+            }
+        },
+        "newAKSSubnetForLoadBalancerName": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Subnet name for dedicated Application Load Balancer"
+            }
+        },
+        "existingAKSDedicatedVNetSubnetName": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Subnet name that will be used for Application Load balancer"
+            }
+        },
+        "existingAKSDedicatedVNetNewOrExisting": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "existingAKSDedicatedVNetResourceGroup": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "serviceCidr": {
+            "defaultValue": "10.0.0.0/16",
+            "type": "String",
+            "metadata": {
+                "description": "A CIDR notation IP range from which to assign service cluster IPs."
+            }
+        },
+        "dnsServiceIP": {
+            "defaultValue": "10.0.0.10",
+            "type": "String",
+            "metadata": {
+                "description": "Containers DNS server IP address."
+            }
+        },
+        "dockerBridgeCidr": {
+            "defaultValue": "172.17.0.1/16",
+            "type": "String",
+            "metadata": {
+                "description": "A CIDR notation IP for Docker bridge."
+            }
+        },
+        "dnsPrefix": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Optional DNS prefix to use with hosted Kubernetes API server FQDN."
+            }
+        },
+        "azureContainerRegistryName": {
+            "type": "String",
+            "metadata": {
+                "description": "Connect your cluster to an Azure Container Registry to enable seamless deployments from a private image registry."
+            }
+        },
+        "azureContainerRegistryId": {
+            "type": "String",
+            "metadata": {
+                "description": "ACR ID in which the Azure Container Registry is deployed"
+            }
+        },
+        "managedIdentity": {
+            "type": "String",
+            "metadata": {
+                "description": "The pod identities to use in the cluster."
+            }
+        },
+        "NBLicenseKey": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "NetBackup License Key."
+            }
+        },
+        "primaryServerHostname": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Primary Server Hostname."
+            }
+        },
+        "primaryServerIP": {
+            "type": "String",
+            "metadata": {
+                "description": "Primary Server IP."
+            }
+        },
+        "primaryServerCatalogStorageType": {
+            "defaultValue": "premium-lrs",
+            "type": "String",
+            "metadata": {
+                "description": "Primary Server Catalog storage type."
+            }
+        },
+        "primaryServerCatalogSize": {
+            "defaultValue": "100",
+            "type": "String",
+            "metadata": {
+                "description": "Primary Server catalog size in GB."
+            }
+        },
+        "primaryServerLogStorageType": {
+            "defaultValue": "premium-lrs",
+            "type": "String",
+            "metadata": {
+                "description": "Primary Server Log storage type"
+            }
+        },
+        "primaryServerLogSize": {
+            "defaultValue": "30",
+            "type": "String",
+            "metadata": {
+                "description": "Primary Server log size in GB."
+            }
+        },
+        "primaryServerUsername": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Primary Server Username"
+            }
+        },
+        "primaryServerPassword": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Primary Server Password"
+            }
+        },
+        "hostMasterKeyID": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Host Master Key ID"
+            }
+        },
+        "hostMasterKeyPassphrase": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Host Master Key passphrase"
+            }
+        },
+        "keyProtectionKeyID": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "Key protection Key ID"
+            }
+        },
+        "keyProtectionKeyPassphrase": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Key Protection Key passphrase"
+            }
+        },
+        "mediaServerReplicas": {
+            "defaultValue": 1,
+            "type": "Int",
+            "metadata": {
+                "description": "Media server replica count"
+            }
+        },
+        "mediaNetworkLoadBalancer": {
+            "type": "Array",
+            "metadata": {
+                "description": "Media IP address and hostnames for the replicas"
+            }
+        },
+        "mediaServerDataStorageType": {
+            "defaultValue": "premium-lrs",
+            "type": "String",
+            "metadata": {
+                "description": "Media server Data storage type"
+            }
+        },
+        "mediaServerDataSize": {
+            "defaultValue": "50",
+            "type": "String",
+            "metadata": {
+                "description": "Media server Data size"
+            }
+        },
+        "mediaServerLogStorageType": {
+            "defaultValue": "premium-lrs",
+            "type": "String",
+            "metadata": {
+                "description": "Media server Log storage type"
+            }
+        },
+        "mediaServerLogSize": {
+            "defaultValue": "30",
+            "type": "String",
+            "metadata": {
+                "description": "Media server Log size"
+            }
+        },
+        "storageServerReplicas": {
+            "defaultValue": 4,
+            "type": "Int",
+            "metadata": {
+                "description": "MSDP server replica count"
+            }
+        },
+        "msdpNetworkLoadBalancer": {
+            "type": "Array",
+            "metadata": {
+                "description": "MSDP server replica count"
+            }
+        },
+        "msdpServerDataStorageType": {
+            "defaultValue": "premium-lrs",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Data storage type"
+            }
+        },
+        "msdpServerDataSize": {
+            "defaultValue": "5",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Data size"
+            }
+        },
+        "msdpServerLogStorageType": {
+            "defaultValue": "premium-lrs",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Log storage type"
+            }
+        },
+        "msdpServerLogSize": {
+            "defaultValue": "30",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Log size"
+            }
+        },
+        "msdpServerCatalogStorageType": {
+            "defaultValue": "premium-lrs",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Catalog storage type"
+            }
+        },
+        "msdpServerCatalogSize": {
+            "defaultValue": "1",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Catalog size"
+            }
+        },
+        "msdpServerUsername": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Username"
+            }
+        },
+        "msdpServerPassword": {
+            "defaultValue": "",
+            "type": "SecureString",
+            "metadata": {
+                "description": "MSDP server Password"
+            }
+        },
+        "msdpServerKeyGroup": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Key Group name"
+            }
+        },
+        "msdpKeySecretUsername": {
+            "defaultValue": "",
+            "type": "String",
+            "metadata": {
+                "description": "MSDP server Key Secret username"
+            }
+        },
+        "msdpKeySecretPassphrase": {
+            "defaultValue": "",
+            "type": "SecureString",
+            "metadata": {
+                "description": "MSDP server Key Secret passphrase"
+            }
+        },
+        "scriptName": {
+            "defaultValue": "[concat('install-environment-', if(parameters('createAKSCluster'), parameters('aksClusterName'), parameters('existingAksClusterName')), '-', utcnow('yyyy-MM-dd-THH-mm-ss'))]",
+            "type": "String"
+        },
+        "containerName": {
+            "defaultValue": "[concat('container-', if(parameters('createAKSCluster'), parameters('aksClusterName'), parameters('existingAksClusterName')), '-', utcnow('yyyy-MM-dd-THH-mm-ss'))]",
+            "type": "String"
+        },
+        "_artifactsLocation": {
+            "defaultValue": "[deployment().properties.templateLink.uri]",
+            "type": "String",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located including a trailing '/'"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "defaultValue": "",
+            "type": "SecureString",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation. When the template is deployed using the accompanying scripts, a sasToken will be automatically generated. Use the defaultValue if the staging location is not secured."
+            }
+        }
+    },
+    "variables": {
+        "acrPullRole": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
+        "azureContainerRegistryResourceGroupName": "[first(skip(split(parameters('azureContainerRegistryId'), '/'), 4))]",
+        "existingAKSResourceGroupName": "[first(skip(split(parameters('existingAksClusterId'), '/'), 4))]",
+        "resourceGroup": "[if(parameters('createAKSCluster'), resourceGroup().name, variables('existingAKSResourceGroupName'))]",
+        "aksClusterName": "[if(parameters('createAKSCluster'), parameters('aksClusterName'), parameters('existingAksClusterName'))]",
+        "newVnetSubnetId": "[if(parameters('createAKSCluster'),resourceId(parameters('newAKSVirtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks/subnets',parameters('newAKSVirtualNetworkName'),parameters('newAKSSubnet1Name')),'')]",
+        "newAKSsubnetForLoadBalancer": "[if(and(parameters('dedicatedSubnetforLoadBalancer'), parameters('createAKSCluster')), parameters('newAKSSubnetForLoadBalancerName'), parameters('newAKSSubnet1Name'))]",
+        "subnetForLoadBalancer": "[if(parameters('dedicatedSubnetforLoadBalancer'), if(parameters('createAKSCluster'), parameters('newAKSSubnetForLoadBalancerName'), parameters('existingAKSDedicatedVNetSubnetName')), '')]",
+        "media_network": "[string(parameters('mediaNetworkLoadBalancer'))]",
+        "msdp_network": "[string(parameters('msdpNetworkLoadBalancer'))]",
+        "media_network_json": "[replace(variables('media_network'), '\"', '\\\"')]",
+        "msdp_network_json": "[replace(variables('msdp_network'), '\"', '\\\"')]",
+        "const_arguments": "[concat('{\\\"name\\\":\\\"',parameters('environmentName'),'\\\",\\\"registry\\\":\\\"',parameters('azureContainerRegistryName'),'.azurecr.io/veritas\\\",\\\"aksName\\\":\\\"',variables('aksClusterName'),'\\\",\\\"resourceGroup\\\":\\\"',variables('resourceGroup'),'\\\",\\\"tag\\\":\\\"latest\\\",\\\"loadBalancerAnnotations\\\":{\\\"azureInternalSubnet\\\":\\\"',variables('subnetForLoadBalancer'),'\\\"},\\\"licenseKeys\\\":[\\\"',parameters('NBLicenseKey'),'\\\"],\\\"primary\\\":{\\\"nodeSelector\\\":{\\\"labelKey\\\":\\\"netbackup.veritas.com.primary\\\",\\\"labelValue\\\":\\\"',parameters('primaryNodePoolName'),'\\\"},\\\"credentials\\\":{\\\"username\\\":\\\"',parameters('primaryServerUsername'),'\\\",\\\"password\\\":\\\"',parameters('primaryServerPassword'),'\\\"},\\\"kmsDBinfo\\\":{\\\"HMKID\\\":\\\"',parameters('hostMasterKeyID'),'\\\",\\\"HMKpassphrase\\\":\\\"',parameters('hostMasterKeyPassphrase'),'\\\",\\\"KPKID\\\":\\\"',parameters('keyProtectionKeyID'),'\\\",\\\"KPKpassphrase\\\":\\\"',parameters('keyProtectionKeyPassphrase'),'\\\"},\\\"networkLoadBalancer\\\":[{\\\"ip\\\":\\\"',parameters('primaryServerIP'),'\\\",\\\"fqdn\\\":\\\"',parameters('primaryServerHostname'),'\\\"}],\\\"storage\\\":{\\\"log\\\":{\\\"storageClassType\\\":\\\"',parameters('primaryServerLogStorageType'),'\\\",\\\"capacity\\\":',parameters('primaryServerLogSize'),'},\\\"catalog\\\":{\\\"storageClassType\\\":\\\"',parameters('primaryServerCatalogStorageType'),'\\\",\\\"capacity\\\":',parameters('primaryServerCatalogSize'),'}}},\\\"mediaServers\\\":[{\\\"replicas\\\":',parameters('mediaServerReplicas'),',\\\"nodeSelector\\\":{\\\"labelKey\\\":\\\"netbackup.veritas.com.media\\\",\\\"labelValue\\\":\\\"',parameters('mediaNodePoolName'),'\\\"},\\\"networkLoadBalancer\\\":',variables('media_network_json'),',\\\"storage\\\":{\\\"data\\\":{\\\"storageClassType\\\":\\\"',parameters('mediaServerDataStorageType'),'\\\",\\\"capacity\\\":',parameters('mediaServerDataSize'),'},\\\"log\\\":{\\\"storageClassType\\\":\\\"',parameters('mediaServerLogStorageType'),'\\\",\\\"capacity\\\":',parameters('mediaServerLogSize'),'}}}],\\\"msdpScaleouts\\\":[{\\\"tag\\\":\\\"latest\\\",\\\"replicas\\\":',parameters('storageServerReplicas'),',\\\"nodeSelector\\\":{\\\"labelKey\\\":\\\"netbackup.veritas.com.msdp\\\",\\\"labelValue\\\":\\\"',parameters('msdpNodePoolName'),'\\\"},\\\"networkLoadBalancer\\\":',variables('msdp_network_json'),',\\\"storageCredentials\\\":{\\\"username\\\":\\\"',parameters('msdpServerUsername'),'\\\",\\\"password\\\":\\\"',parameters('msdpServerPassword'),'\\\"},\\\"kms\\\":{\\\"keyGroup\\\":\\\"',parameters('msdpServerKeyGroup'),'\\\",\\\"keySecret\\\":{\\\"username\\\":\\\"',parameters('msdpKeySecretUsername'),'\\\",\\\"passphrase\\\":\\\"',parameters('msdpKeySecretPassphrase'),'\\\"}},\\\"storage\\\":{\\\"dataVolumes\\\":[{\\\"storageClassType\\\":\\\"',parameters('msdpServerDataStorageType'),'\\\",\\\"capacity\\\":',parameters('msdpServerDataSize'),'}],\\\"log\\\":{\\\"storageClassType\\\":\\\"',parameters('msdpServerLogStorageType'),'\\\",\\\"capacity\\\":',parameters('msdpServerLogSize'),'},\\\"catalog\\\":{\\\"storageClassType\\\":\\\"',parameters('msdpServerCatalogStorageType'),'\\\",\\\"capacity\\\":',parameters('msdpServerCatalogSize'),'}}}]}')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "pid-d5005528-1f8c-4b8d-8fd3-ac7b0747518c-partnercenter",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.ContainerService/managedClusters",
+            "apiVersion": "2021-10-01",
+            "name": "[parameters('aksClusterName')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "displayname": "AKS Cluster"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "dnsPrefix": "[parameters('dnsPrefix')]",
+                "agentPoolProfiles": [
+                    {
+                        "name": "agentpool",
+                        "count": 1,
+                        "vmSize": "Standard_DS2_v2",
+                        "osType": "Linux",
+                        "storageProfile": "ManagedDisks",
+                        "osDiskType": "Managed",
+                        "vnetSubnetID": "[variables('newVnetSubnetId')]",
+                        "enableAutoScaling": false,
+                        "mode": "System"
+                    }
+                ],
+                "networkProfile": {
+                    "loadBalancerSku": "standard",
+                    "networkPlugin": "[parameters('networkConfiguration')]",
+                    "serviceCidr": "[parameters('serviceCidr')]",
+                    "dnsServiceIP": "[parameters('dnsServiceIP')]",
+                    "dockerBridgeCidr": "[parameters('dockerBridgeCidr')]"
+                }
+            },
+            "condition": "[parameters('createAKSCluster')]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "primary-agentpool",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.ContainerService/managedClusters/agentPools",
+                            "apiVersion": "2021-10-01",
+                            "name": "[concat(variables('aksClusterName'),'/', parameters('primaryNodePoolName'))]",
+                            "properties": {
+                                "name": "[parameters('primaryNodePoolName')]",
+                                "count": "[parameters('primaryNodeCount')]",
+                                "vmSize": "[parameters('primaryAgentVMSize')]",
+                                "osType": "Linux",
+                                "storageProfile": "ManagedDisks",
+                                "osDiskType": "Managed",
+                                "vnetSubnetID": "[if(parameters('createAKSCluster'), variables('newVnetSubnetId'), reference(parameters('existingAksClusterId'), '2020-12-01', 'Full').properties.agentPoolProfiles[0].vnetSubnetID)]",
+                                "enableAutoScaling": true,
+                                "minCount": 1,
+                                "maxCount": "[parameters('primaryNodeCount')]",
+                                "maxPods": 16,
+                                "mode": "User",
+                                "type": "VirtualMachineScaleSets",
+                                "nodeLabels": {
+                                    "netbackup.veritas.com.primary": "[parameters('primaryNodePoolName')]"
+                                },
+                                "availabilityZones": "[if(not(equals(parameters('availabilityZones'), 'none')), array(parameters('availabilityZones')), json('null'))]"
+                            }
+                        }
+                    ]
+                }
+            },
+            "subscriptionId": "[subscription().subscriptionId]",
+            "resourceGroup": "[variables('resourceGroup')]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "media-agentpool",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.ContainerService/managedClusters/agentPools",
+                            "apiVersion": "2021-10-01",
+                            "name": "[concat(variables('aksClusterName'),'/', parameters('mediaNodePoolName'))]",
+                            "properties": {
+                                "name": "[parameters('mediaNodePoolName')]",
+                                "vmSize": "[parameters('mediaAgentVMSize')]",
+                                "osType": "Linux",
+                                "storageProfile": "ManagedDisks",
+                                "osDiskType": "Managed",
+                                "vnetSubnetID": "[if(parameters('createAKSCluster'), variables('newVnetSubnetId'), reference(parameters('existingAksClusterId'), '2020-12-01', 'Full').properties.agentPoolProfiles[0].vnetSubnetID)]",
+                                "enableAutoScaling": true,
+                                "count": "[parameters('mediaServerReplicas')]",
+                                "minCount": "[parameters('mediaServerReplicas')]",
+                                "maxCount": "[parameters('mediaNodeCount')]",
+                                "maxPods": 16,
+                                "mode": "User",
+                                "type": "VirtualMachineScaleSets",
+                                "nodeLabels": {
+                                    "netbackup.veritas.com.media": "[parameters('mediaNodePoolName')]"
+                                },
+                                "availabilityZones": "[if(not(equals(parameters('availabilityZones'), 'none')), array(parameters('availabilityZones')), json('null'))]"
+                            }
+                        }
+                    ]
+                }
+            },
+            "subscriptionId": "[subscription().subscriptionId]",
+            "resourceGroup": "[variables('resourceGroup')]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "msdp-agentpool",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.ContainerService/managedClusters/agentPools",
+                            "apiVersion": "2021-10-01",
+                            "name": "[concat(variables('aksClusterName'),'/', parameters('msdpNodePoolName'))]",
+                            "properties": {
+                                "name": "[parameters('msdpNodePoolName')]",
+                                "vmSize": "[parameters('msdpAgentVMSize')]",
+                                "osType": "Linux",
+                                "storageProfile": "ManagedDisks",
+                                "osDiskType": "Managed",
+                                "vnetSubnetID": "[if(parameters('createAKSCluster'), variables('newVnetSubnetId'), reference(parameters('existingAksClusterId'), '2020-12-01', 'Full').properties.agentPoolProfiles[0].vnetSubnetID)]",
+                                "enableAutoScaling": true,
+                                "count": "[parameters('storageServerReplicas')]",
+                                "minCount": "[parameters('storageServerReplicas')]",
+                                "maxCount": "[parameters('msdpNodeCount')]",
+                                "maxPods": 16,
+                                "mode": "User",
+                                "type": "VirtualMachineScaleSets",
+                                "nodeLabels": {
+                                    "netbackup.veritas.com.msdp": "[parameters('msdpNodePoolName')]"
+                                },
+                                "availabilityZones": "[if(not(equals(parameters('availabilityZones'), 'none')), array(parameters('availabilityZones')), json('null'))]"
+                            }
+                        }
+                    ]
+                }
+            },
+            "subscriptionId": "[subscription().subscriptionId]",
+            "resourceGroup": "[variables('resourceGroup')]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "ACR-pull-role-assignment",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.ContainerRegistry/registries/providers/roleAssignments",
+                            "apiVersion": "2020-04-01-preview",
+                            "name": "[concat(parameters('azureContainerRegistryName'), '/Microsoft.Authorization/', guid(variables('aksClusterName')))]",
+                            "properties": {
+                                "roleDefinitionId": "[variables('acrPullRole')]",
+                                "principalId": "[if(parameters('createAKSCluster'), reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName')), '2020-12-01', 'Full').properties.identityProfile.kubeletidentity.objectId, '')]"
+                            }
+                        }
+                    ]
+                }
+            },
+            "subscriptionId": "[subscription().subscriptionId]",
+            "resourceGroup": "[variables('azureContainerRegistryResourceGroupName')]",
+            "condition": "[parameters('createAKSCluster')]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "[concat(parameters('newAKSSubnet1Name'), '-role-assignment')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments",
+                            "apiVersion": "2020-04-01-preview",
+                            "name": "[concat(parameters('newAKSVirtualNetworkName'), '/', parameters('newAKSSubnet1Name'), '/Microsoft.Authorization/', guid(concat(variables('resourceGroup'), parameters('newAKSSubnet1Name'), parameters('aksClusterName'))))]",
+                            "properties": {
+                                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+                                "principalId": "[if(parameters('createAKSCluster'), reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName')), '2020-12-01', 'Full').identity.principalId, '')]",
+                                "scope": "[resourceId(parameters('newAKSVirtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets/', parameters('newAKSVirtualNetworkName'), parameters('newAKSSubnet1Name'))]"
+                            }
+                        }
+                    ]
+                }
+            },
+            "resourceGroup": "[parameters('newAKSVirtualNetworkResourceGroup')]",
+            "condition": "[parameters('createAKSCluster')]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "[concat(variables('newAKSsubnetForLoadBalancer'), '-role-assignments')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets/providers/roleAssignments",
+                            "apiVersion": "2020-04-01-preview",
+                            "name": "[concat(parameters('newAKSVirtualNetworkName'), '/', variables('newAKSsubnetForLoadBalancer'), '/Microsoft.Authorization/', guid(concat(variables('resourceGroup'), variables('newAKSsubnetForLoadBalancer'), parameters('aksClusterName'))))]",
+                            "properties": {
+                                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+                                "principalId": "[if(parameters('createAKSCluster'), reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName')), '2020-12-01', 'Full').identity.principalId, '')]",
+                                "scope": "[resourceId(parameters('newAKSVirtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('newAKSVirtualNetworkName'), variables('newAKSsubnetForLoadBalancer'))]"
+                            }
+                        }
+                    ]
+                }
+            },
+            "resourceGroup": "[parameters('newAKSVirtualNetworkResourceGroup')]",
+            "condition": "[and(parameters('createAKSCluster'), parameters('dedicatedSubnetforLoadBalancer'))]"
+        },
+        {
+            "type": "Microsoft.Resources/deploymentScripts",
+            "apiVersion": "2020-10-01",
+            "name": "[parameters('scriptName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/ACR-pull-role-assignment",
+                "Microsoft.Resources/deployments/primary-agentpool",
+                "Microsoft.Resources/deployments/media-agentpool",
+                "Microsoft.Resources/deployments/msdp-agentpool"
+            ],
+            "kind": "AzureCLI",
+            "identity": {
+                "type": "userAssigned",
+                "userAssignedIdentities": {
+                    "[parameters('managedIdentity')]": {}
+                }
+            },
+            "properties": {
+                "arguments": "[string(variables('const_arguments'))]",
+                "forceUpdateTag": "1",
+                "containerSettings": {
+                    "containerGroupName": "[parameters('containerName')]"
+                },
+                "azCliVersion": "2.29.2",
+                "primaryScriptUri": "[uri(parameters('_artifactsLocation'), concat('files/market_deploy.sh', parameters('_artifactsLocationSasToken')))]",
+                "supportingScriptUris": [
+                    "[uri(parameters('_artifactsLocation'), concat('files/operators.tgz', parameters('_artifactsLocationSasToken')))]"
+                ],
+                "cleanupPreference": "onSuccess",
+                "retentionInterval": "P1D",
+                "timeout": "PT4H"
+            }
+        }
+    ],
+    "outputs": {
+        "ClusterName": {
+            "type": "String",
+            "value": "[variables('aksClusterName')]"
+        },
+        "controlPlaneFQDN": {
+            "type": "String",
+            "value": "[reference(if(parameters('createAKSCluster'), resourceId('Microsoft.ContainerService/managedClusters', parameters('aksClusterName')), parameters('existingAksClusterId')), '2020-12-01', 'Full').properties.fqdn]"
+        }
+    }
+}

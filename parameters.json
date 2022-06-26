@@ -1,0 +1,226 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentName": {
+            "value": "nb10clusinstance"
+        },
+        "createAKSCluster": {
+            "value": true
+        },
+        "aksClusterName": {
+            "value": "nbaksclus1"
+        },
+        "existingAksClusterId": {
+            "value": ""
+        },
+        "existingAksClusterName": {
+            "value": ""
+        },
+        "location": {
+            "value": "northeurope"
+        },
+        "availabilityZones": {
+            "value": "none"
+        },
+        "primaryNodePoolName": {
+            "value": "nbprinpool"
+        },
+        "primaryNodeCount": {
+            "value": 1
+        },
+        "primaryAgentVMSize": {
+            "value": "Standard_D16ds_v5"
+        },
+        "mediaNodePoolName": {
+            "value": "nbmednpool"
+        },
+        "mediaNodeCount": {
+            "value": 1
+        },
+        "mediaAgentVMSize": {
+            "value": "Standard_D8ds_v5"
+        },
+        "msdpNodePoolName": {
+            "value": "nbstgnpool"
+        },
+        "msdpNodeCount": {
+            "value": 4
+        },
+        "msdpAgentVMSize": {
+            "value": "Standard_E8s_v5"
+        },
+        "networkConfiguration": {
+            "value": "azure"
+        },
+        "dedicatedSubnetforLoadBalancer": {
+            "value": true
+        },
+        "newAKSVirtualNetworkName": {
+            "value": "nbu10-vnet"
+        },
+        "newAKSVirtualNetworkResourceGroup": {
+            "value": "nbu10-rg"
+        },
+        "newAKSSubnet1Name": {
+            "value": "aznbusubnet2"
+        },
+        "newAKSSubnetForLoadBalancerName": {
+            "value": "default"
+        },
+        "existingAKSDedicatedVNetSubnetName": {
+            "value": ""
+        },
+        "existingAKSDedicatedVNetNewOrExisting": {
+            "value": ""
+        },
+        "existingAKSDedicatedVNetResourceGroup": {
+            "value": ""
+        },
+        "serviceCidr": {
+            "value": "10.0.0.0/16"
+        },
+        "dnsServiceIP": {
+            "value": "10.0.0.30"
+        },
+        "dockerBridgeCidr": {
+            "value": "172.17.0.2/16"
+        },
+        "dnsPrefix": {
+            "value": "nbaksdns1"
+        },
+        "azureContainerRegistryName": {
+            "value": "aznbucr1"
+        },
+        "azureContainerRegistryId": {
+            "value": "/subscriptions/430f506a-9dea-4526-8faa-0b59abc6b3b5/resourceGroups/nbu10-rg/providers/Microsoft.ContainerRegistry/registries/aznbucr1"
+        },
+        "managedIdentity": {
+            "value": "/subscriptions/430f506a-9dea-4526-8faa-0b59abc6b3b5/resourceGroups/nbu10-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/nbu-UAMI"
+        },
+        "nbLicenseKey": {
+            "value": "KJNW-P8TN-DBW4-ALCZ-CRPR-NWO4-F4K4-V7GG-VECP-P"
+        },
+        "primaryServerHostname": {
+            "value": "nbprisvr.nbudemo.com"
+        },
+        "primaryServerIP": {
+            "value": "10.0.0.40"
+        },
+        "primaryServerCatalogStorageType": {
+            "value": "standard-lrs"
+        },
+        "primaryServerCatalogSize": {
+            "value": "100"
+        },
+        "primaryServerLogStorageType": {
+            "value": "standard-lrs"
+        },
+        "primaryServerLogSize": {
+            "value": "30"
+        },
+        "primaryServerUsername": {
+            "value": "nbadmin"
+        },
+        "primaryServerPassword": {
+            "value": "Poiuyt@12345"
+        },
+        "hostMasterKeyID": {
+            "value": "nbadmin"
+        },
+        "hostMasterKeyPassphrase": {
+            "value": "Poiuyt@12345"
+        },
+        "keyProtectionKeyID": {
+            "value": "nbadmin"
+        },
+        "keyProtectionKeyPassphrase": {
+            "value": "Poiuyt@12345"
+        },
+        "mediaServerReplicas": {
+            "value": 1
+        },
+        "mediaNetworkLoadBalancer": {
+            "value": [
+                {
+                    "ip": "10.0.0.45",
+                    "fqdn": "nbmed1.nbudemo.com"
+                }
+            ]
+        },
+        "mediaServerDataStorageType": {
+            "value": "standard-lrs"
+        },
+        "mediaServerDataSize": {
+            "value": "50"
+        },
+        "mediaServerLogStorageType": {
+            "value": "standard-lrs"
+        },
+        "mediaServerLogSize": {
+            "value": "30"
+        },
+        "storageServerReplicas": {
+            "value": 4
+        },
+        "msdpNetworkLoadBalancer": {
+            "value": [
+                {
+                    "ip": "10.0.0.50",
+                    "fqdn": "nbstgsvr1.nbudemo.com"
+                },
+                {
+                    "ip": "10.0.0.51",
+                    "fqdn": "nbstgsvr2.nbudemo.com"
+                },
+                {
+                    "ip": "10.0.0.52",
+                    "fqdn": "nbstgsvr3.nbudemo.com"
+                },
+                {
+                    "ip": "10.0.0.53",
+                    "fqdn": "nbstgsvr4.nbudemo.com"
+                }
+            ]
+        },
+        "msdpServerDataStorageType": {
+            "value": "standard-lrs"
+        },
+        "msdpServerDataSize": {
+            "value": "2"
+        },
+        "msdpServerLogStorageType": {
+            "value": "standard-lrs"
+        },
+        "msdpServerLogSize": {
+            "value": "5"
+        },
+        "msdpServerCatalogStorageType": {
+            "value": "standard-lrs"
+        },
+        "msdpServerCatalogSize": {
+            "value": "20"
+        },
+        "msdpServerUsername": {
+            "value": "nbadmin"
+        },
+        "msdpServerPassword": {
+            "value": "Poiuyt@12345"
+        },
+        "msdpServerKeyGroup": {
+            "value": "nbadmin"
+        },
+        "msdpKeySecretUsername": {
+            "value": "nbadmin"
+        },
+        "msdpKeySecretPassphrase": {
+            "value": "Poiuyt@12345"
+        },
+        "scriptName": {
+            "value": "install-environment-nbaksclus1-2022-06-26-T08-10-09"
+        },
+        "containerName": {
+            "value": "container-nbaksclus1-2022-06-26-T08-10-09"
+        }
+    }
+}
